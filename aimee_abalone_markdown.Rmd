@@ -1,0 +1,116 @@
+---
+title: "Abalone Urchin IMTA"
+author: "Aimee"
+date: "04/04/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+#Setup
+- Set working directory
+- Load data
+- Rename columns
+
+```{r}
+setwd("~/UCT/2022/PROJECT/Abalone")
+data <- read.csv("abalone_data.csv", fileEncoding = 'UTF-8-BOM')
+names(data)
+names(data)<- c("Tank", "Individual", "Length", "Width", "Week")
+names(data)
+attach(data)
+unclass(data$Week)
+data$Week = as.factor(data$Week)
+unclass(data$Week)
+```
+New column names: 
+[1] "Tank"       "Individual" "Length"    
+[4] "Width"      "Week" 
+
+#Subset data
+Tank 0 is the baseline measurement measured at the start of the study (week 0)
+Abalone shell length and width measurements taken at weeks 1,4 and 8 for the treatment and control tanks:
+Tank 1,2 & 3 are treatment replicates 
+Tanks 4,5 & 6 are control replicates
+
+Treatment = abalone feed supplemented with sea urchin faeces
+Control = abalone feed not supplemented with sea urchin faeces
+```{r}
+base <- data[data$Tank == "0",]
+treatment <- data[data$Tank == c("1","2","3"),] 
+control <- data[data$Tank == c("4","5","6"),] 
+```
+
+Basic plots:
+
+
+```{r}
+par(las = 1)
+
+#boxplots
+plot(treatment$Week,treatment$Length, xlab = "Week", ylab = "Individual Length(cm)", main = "Treatment tanks", ylim = c(0,1.4))
+
+plot(control$Week,control$Length, xlab = "Week", ylab = "Individual Length(cm)", main = "Control tanks", ylim = c(0,1.4))
+
+#grouped bar plot
+tr <- treatment[,c(3,5)] #only looking at length and week columns
+co <- control[,c(3,5)]
+week <- treatment[,5]
+tr1 <- tr[tr$Week=="1",-c(2)] #lengths for treatment at week 1
+tr4 <- tr[tr$Week=="4",-c(2)] #week 4
+tr8 <- tr[tr$Week=="8",-c(2)] #week 8
+
+
+co1 <- co[co$Week=="1",-c(2)] #lengths for control at week 1
+co4 <- co[co$Week=="4",-c(2)] #week 4
+co8 <- co[co$Week=="8",-c(2)] #week 8
+
+#means for treatment and controls at weeks 1,4 & 8
+tr1mean <- mean(tr1)
+tr4mean <- mean(tr4)
+tr8mean <- mean(tr8)
+
+co1mean <- mean(co1)
+co4mean <- mean(co4)
+co8mean <- mean(co8)
+
+#combine means into a string for treatment and control
+
+treat <- c(tr1mean,tr4mean,tr8mean)
+con <- c(co1mean, co4mean, co8mean)
+
+dat = data.frame(treat,con)
+bardat = t(dat)
+colnames(bardat)= c("1", "4", "8")
+barplot(as.matrix(bardat), main="", 
+        ylab = "Mean length (cm)", 
+        xlab = "Week", 
+        cex.lab = 1.2, 
+        cex.main = 1.4,beside = TRUE, 
+        col=c("black","grey"), ylim = c(0,0.8))
+legend("topleft", c("treatment","control"), cex=1.2, bty="n", fill=c("black","grey"))
+
+     
+```
+
+
+Visual analysis of the mean lengths:
+
+at week 1 & 4, treatment tank mean lengths are higher than control.
+at week 8 the treatment and control tanks have a similar mean shell length. 
+
+
+```{r}
+plot(treatment$Length, treatment$Week , pch = 24, bg = "blue", ylab = "Week", xlab = "Shell length (cm)")
+points(control$Length,control$Week , col = "red",bg = "red", pch = 21)
+legend("bottomright", c("treatment","control"), cex=1.2, bty="n", fill=c("blue","red"))
+```
+
+Visual analysis of the all lengths:
+
+largest shell lengths at weeks 1, 4 & 8 are abalone from treatment tanks. 
+
+
