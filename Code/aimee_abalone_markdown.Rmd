@@ -1,0 +1,147 @@
+---
+title: "Abalone Urchin IMTA"
+author: "Aimee"
+date: "04/04/2022"
+output: html_document
+keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd("~/AbaloneIMTA")
+
+```
+
+This code is for the purpose of the data management module submission, but is beneficial for my honours project:
+This code sorts through mortality weight data and plots a simple graph
+
+## Setup
+Make sure Abalone IMTA file is saved under documents in order for pathways to work
+
+This chunk will read in each sheet
+
+```{r load data, include=FALSE}
+library(tidyverse)
+library(readxl)
+path<- "~/AbaloneIMTA/Data/abalone_measurements_raw.xlsx"
+measurements_raw <- read_xlsx(path)
+excel_sheets(path)
+#[1] "Week 0" "Week 1" "Week 4" "Week 8"
+
+week0raw<- read_excel(path, sheet = "Week 0")
+week1raw<- read_excel(path, sheet = "Week 1")
+week4raw<- read_excel(path, sheet = "Week 4")
+week8raw<- read_excel(path, sheet = "Week 8")
+```
+
+## Tidy data
+The shell length and width measurements were recorded using imaging software. 
+The imaging software placed shell length in the first row and shell width in the second row for each individual.
+
+This chunk of code will take the shell width measurements out and place them in a new column.
+```{r tidy data, include=FALSE}
+library(dplyr)
+#subset data to isolate individual & length/width columns
+week0<-week0raw[,c(2,3)]
+week1<-week1raw[,c(2,3)]
+week4<-week4raw[,c(2,3)]
+week8<-week8raw[,c(2,3)]
+
+names(week0)<-c("Individual","Length")
+names(week1)<-c("Individual","Length")
+names(week4)<-c("Individual","Length")
+names(week8)<-c("Individual","Length")
+#create dataset with only individual & width
+week0Width<- week0 %>%
+ filter(is.na(Individual))
+week1Width<- week1 %>%
+ filter(is.na(Individual))
+week4Width<- week4 %>%
+ filter(is.na(Individual))
+week8Width<- week8 %>%
+ filter(is.na(Individual))
+
+#tidy width data set by removing individual column (since all values are NA)
+#and rename column header to be just width
+week0Width<-week0Width[,2]
+names(week0Width) <- c("Width")
+week1Width<-week1Width[,2]
+names(week1Width) <- c("Width")
+week4Width<-week4Width[,2]
+names(week4Width) <- c("Width")
+week8Width<-week8Width[,2]
+names(week8Width) <- c("Width")
+#remove rows with NA values from isolated data set i.e., deleting width measurements
+week0<-week0 %>%
+ filter(row_number() %% 2 == 1)
+week1<-week1 %>%
+ filter(row_number() %% 2 == 1)
+week4<-week4 %>%
+ filter(row_number() %% 2 == 1)
+week8<-week8 %>%
+ filter(row_number() %% 2 == 1)
+#combine isolated data set with new width data set
+week0<-bind_cols(week0,week0Width)
+week1<-bind_cols(week1,week1Width)
+week4<-bind_cols(week4,week4Width)
+week8<-bind_cols(week8,week8Width)
+
+#Add treatment column to weeks 1,4 & 8 to separate tank types
+treatment_type1 <- rep("Treatment 1", length = 100)
+treatment_type2 <- rep("Treatment 2", length = 100)
+treatment_type3 <- rep("Treatment 3", length = 100)
+treatment_type4 <- rep("Control 1", length = 100)
+treatment_type5 <- rep("Control 2", length = 100)
+treatment_type6 <- rep("Control 3", length = 100)
+treatment <- c(treatment_type1,treatment_type2,treatment_type3,treatment_type4, treatment_type5, treatment_type6)
+week1$Treatment <- treatment
+week4$Treatment <- treatment
+week8$Treatment <- treatment
+week0$Treatment <- rep("Baseline", length = 300)
+
+week0$Week <- rep("0", length=300)
+week1$Week <- rep("1", length=600)
+week4$Week <- rep("4", length=600)
+week8$Week <- rep("8", length=600)
+
+
+measurements_clean <- bind_rows(week0, week1, week4, week8)
+```
+
+Yay! data is tidy now!
+
+## Save clean data
+```{r, include = FALSE}
+write.csv(week0,"~/AbaloneIMTA/Data/abalone_measurements_week0.csv")
+write.csv(week1,"~/AbaloneIMTA/Data/abalone_measurements_week1.csv" )
+write.csv(week4,"~/AbaloneIMTA/Data/abalone_measurements_week4.csv" )
+write.csv(week8,"~/AbaloneIMTA/Data/abalone_measurements_week8.csv" )
+write.csv(measurements_clean,"~/AbaloneIMTA/Data/abalone_measurements_clean.csv")
+```
+
+
+# Simple plot
+
+Tank 0 is the baseline measurement measured at the start of the study (week 0)
+Abalone shell length and width measurements taken at weeks 1,4 and 8 for the treatment and control tanks:
+There are three treatment replicate tanks (Treatment 1, Treatment 2 & Treatment 3) and three control replicates (Control 1, Control 2, Control 3)
+
+Treatment = abalone feed supplemented with sea urchin faeces
+Control = abalone feed not supplemented with sea urchin faeces
+
+Subset treatment & control data sets
+```{r, include=FALSE}
+
+treatment_data <- measurements_clean[measurements_clean$Treatment =="Treatment 1"|measurements_clean$Treatment =="Treatment 2"|measurements_clean$Treatment =="Treatment 3",]
+
+control_data <- measurements_clean[measurements_clean$Treatment =="Control 1"|measurements_clean$Treatment =="Control 2"|measurements_clean$Treatment =="Control 3",]
+
+
+```
+
+```{r, echo=FALSE}
+plot(treatment_data$Length, treatment_data$Width, xlab = "Shell length (cm)", 
+     ylab = "Shell width (cm)", col = "blue")
+points(control_data$Length, control_data$Width, col = "red")
+legend("bottomright", c("Treatment", "Control"), col = c("blue", "red"), pch = c(21,21), bty = "n")
+```
