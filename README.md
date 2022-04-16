@@ -1,4 +1,6 @@
 ## AbaloneIMTA
+# In order for this to work
+Please save the AbaloneIMTA folder under your documents so that pathways will work
 # Project description
 The high value abalone species, Haliotis midae, and the Cape sea urchin, Parechinus angulosus, have a similar preferred temperature range (12 – 20 °C) and commonly occur together in nature. Particularly during the juvenile stages of the abalone life cycle, the urchins provide the juvenile abalone with shelter and protection from predators (Day & Branch, 2002). 
 Considering co-habitation of sea urchins and abalone in natural environments, as well as the potential symbiotic relationships that exist between them, they could be co-cultured as a method 
